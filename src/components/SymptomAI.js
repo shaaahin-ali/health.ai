@@ -29,7 +29,7 @@ const SymptomAI = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer YOUR_API_KEY`, // Replace with your OpenAI API key
+            Authorization: REACT_APP_OPENAI_API_KEY, // Replace with your OpenAI API key
           },
         }
       );
