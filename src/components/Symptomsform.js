@@ -1,64 +1,87 @@
-// src/components/SymptomsForm.js
+// src/components/Symptomsform.js
 import React, { useState } from "react";
-import axios from "axios";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useNavigate } from "react-router-dom";
 
 const SymptomsForm = () => {
-  const [symptoms, setSymptoms] = useState(""); // Holds user symptoms
-  const [diagnosis, setDiagnosis] = useState(""); // Holds AI diagnosis
-  const [loading, setLoading] = useState(false); // Show loading while awaiting response
+  const [symptoms, setSymptoms] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Moved inside the component
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true); // Start loading spinner
-    try {
-      const response = await axios.post(
-        "https://api.openai.com/v1/completions",
-        {
-          model: "text-davinci-003", // OpenAI model
-          prompt: `Diagnose these symptoms: ${symptoms}`,
-          max_tokens: 100,
-        },
-        {
-          headers: {
-            Authorization: `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`, // Replace with your actual OpenAI API key
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      setDiagnosis(response.data.choices[0].text); // Store AI response in diagnosis state
-    } catch (error) {
-      console.error("Error fetching diagnosis", error);
-      setDiagnosis("Sorry, something went wrong.");
+  // Initialize Gemini API with your key
+  const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Free tier model
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!symptoms.trim()) {
+      alert("Please enter your symptoms.");
+      return;
     }
-    setLoading(false); // Stop loading spinner
+    setLoading(true);
+    setDiagnosis(""); // Clear previous diagnosis
+
+    try {
+      // New prompt
+      const prompt = `You are a medical AI assistant. Analyze these symptoms: "${symptoms}". Give me 3 possible conditions in this format:
+      1. [Condition]: [One short sentence explaining it.]
+      2. [Condition]: [One short sentence explaining it.]
+      3. [Condition]: [One short sentence explaining it.]
+      Then add: "Always see a doctor for a real diagnosis."please be in a professional tone.`;
+
+      // Call the Gemini API
+      const result = await model.generateContent(prompt);
+      const response = await result.response.text();
+
+      setDiagnosis(response);
+    } catch (error) {
+      console.error("Error fetching diagnosis:", error);
+      setDiagnosis("Sorry, something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="symptoms-form p-6 max-w-md mx-auto">
-      <h1 className="text-3xl font-bold mb-4">AI Health Diagnosis</h1>
-      <form onSubmit={handleSubmit} className="mb-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 px-6 py-12">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">
+        Health AI Assistant
+      </h1>
+      <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
         <textarea
           value={symptoms}
           onChange={(e) => setSymptoms(e.target.value)}
-          placeholder="Describe your symptoms here..."
-          className="w-full h-32 p-4 border border-gray-300 rounded-md"
+          placeholder="Enter your symptoms here (e.g., fever, cough)..."
+          rows="4"
+          className="w-full p-3 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
         />
         <button
-          type="submit"
-          className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          onClick={handleSubmit}
+          className="bg-blue-500 text-white px-6 py-3 rounded-lg w-full hover:bg-blue-600 transition duration-200 font-semibold disabled:bg-blue-300"
           disabled={loading}
         >
-          {loading ? "Processing..." : "Submit Symptoms"}
+          {loading ? "Processing..." : "Get Diagnosis"}
         </button>
-      </form>
-
-      {/* Display the diagnosis */}
-      {diagnosis && (
-        <div className="bg-gray-100 p-4 rounded-lg">
-          <h2 className="text-xl font-bold">Diagnosis:</h2>
-          <p className="mt-2 text-gray-700">{diagnosis}</p>
-        </div>
-      )}
+        {diagnosis && (
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-inner">
+            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">
+              AI Response:
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300">{diagnosis}</p>
+            <p className="text-red-500 text-sm mt-2">
+              Note: This is a demo. Consult a doctor for real medical advice.
+            </p>
+            <button
+              onClick={() => navigate("/hospitals")}
+              className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 font-semibold"
+            >
+              Find Nearby Hospitals
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
