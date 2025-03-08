@@ -1,4 +1,3 @@
-// src/components/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WorldMap from "./ui/world-map"; // Adjusted path
@@ -9,10 +8,15 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    if (name && password) {
+    if (!name || !password) {
+      alert("Please enter both name and password.");
+      return;
+    }
+
+    if (password === "health123") {
       navigate("/symptoms");
     } else {
-      alert("Please enter both name and password.");
+      alert("Incorrect password! Please try again.");
     }
   };
 
