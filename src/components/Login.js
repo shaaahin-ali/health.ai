@@ -1,22 +1,21 @@
+// src/components/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import WorldMap from "./ui/world-map"; // Adjusted path
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
+import WorldMap from "./ui/world-map";
 
 const Login = () => {
-  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    if (!name || !password) {
-      alert("Please enter both name and password.");
-      return;
-    }
-
-    if (password === "health123") {
+  const handleLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       navigate("/symptoms");
-    } else {
-      alert("Incorrect password! Please try again.");
+    } catch (error) {
+      alert("Login failed: " + error.message);
     }
   };
 
@@ -26,8 +25,8 @@ const Login = () => {
         <WorldMap
           dots={[
             {
-              start: { lat: 37.7749, lng: -122.4194, label: "San Francisco" },
-              end: { lat: 40.7128, lng: -74.006, label: "New York" },
+              start: { lat: 37.7749, lng: -122.4194 },
+              end: { lat: 40.7128, lng: -74.006 },
             },
           ]}
           lineColor="#0ea5e9"
@@ -36,37 +35,32 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 bg-gray-800/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-full max-w-md border border-gray-700/50">
-        <h1 className="text-5xl font-extrabold mb-6 text-center text-blue-400 animate-pulse drop-shadow-lg">
-          Health.ai
+        <h1 className="text-4xl font-extrabold mb-6 text-center text-blue-400">
+          Fiza
         </h1>
-        <p className="text-xl mb-8 text-center text-gray-200 font-light tracking-wide">
-          Welcome to Your Health Companion
-        </p>
 
         <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mb-4 border border-gray-600/50 rounded-lg p-4 w-full bg-gray-700/50 text-white placeholder-gray-400/70 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mb-4 border border-gray-600/50 rounded-lg p-4 w-full bg-gray-700/50 text-white"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 border border-gray-600/50 rounded-lg p-4 w-full bg-gray-700/50 text-white placeholder-gray-400/70 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
+          className="mb-6 border border-gray-600/50 rounded-lg p-4 w-full bg-gray-700/50 text-white"
         />
         <button
           onClick={handleLogin}
-          className="bg-blue-600 text-white p-4 rounded-lg w-full hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
+          className="bg-blue-600 text-white p-4 rounded-lg w-full hover:bg-blue-700"
         >
           Login
         </button>
       </div>
-      <p className="mt-8 text-sm text-gray-500 font-light tracking-tight">
-        © 2025 Shah • Health.ai
-      </p>
+      <p className="mt-8 text-sm text-gray-500">© registered to fiza</p>
     </div>
   );
 };
